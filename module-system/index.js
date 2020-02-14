@@ -1,5 +1,5 @@
-// function that mimics a subset of the functionality of the require() function of Node
 
+// funcion que carga el contenido de un modulo, lo wrapea en un scope privado y lo evalua.
 function loadModule(filename, module, require) {
   const wrappedSrc = `(function(module, exports, require){
     ${fs.readFileSync(filename, "utf-8")}
@@ -7,28 +7,33 @@ function loadModule(filename, module, require) {
   eval(wrappedSrc);
 }
 
+// funcion que imitia un subconjunto de funcionalidades de la funcion original require() de Node.js
 const require = (moduleName) => {
   console.log(`Require invoked for module ${moduleName}`);
-  // [1]
+  // [1] resuelve el full path del modulo, y se almacena en la constante id. 
+  // require.resolve() implementa un algoritmo de resolucion especifico.
   const id = require.resolve(moduleName);
-  // [2]
+  // [2] si el modulo ya fue cargado en el pasado, deberia estar disponible en la cache. En ese caso
+  // se lo retorna inmediatamente.
   if (require.cache[id]) {
     return require.cache[id].exports;
   }
 
-  //[3] module metadata
+  //[3] metadatos del modulo: si el modulo aun no fue cargado, se arma el entorno para la primera carga.
+  // la propiedad exports del objeto es la que va a ser usada por el codigo del modulo para exponer cualquier API publica.
   const module = {
     exports: {},
     id: id
   };
 
-  // [4] update the cache
+  // [4] actualizar la cache: el objeto module es cacheado.
   require.cache[id] = module;
 
-  //[5] load the module
+  //[5] cargar el modulo: el codigo fuente del modulo es leido desde el archivo y el codigo es evaluado.
   loadModule(id, module, require);
 
-  // [6] return exported variables
+  // [6] retornar variables exportadas: finalmente, el contenido de module.exports, que representa la 
+  // API publica del modulo es retornado al caller.
   return module.exports;
 };
 
@@ -36,21 +41,3 @@ require.cache = {};
 require.resolve = (moduleName) => {
   // resolve a full module id from the moduleName
 };
-
-
-// [1] A module name is accepted as input, and the very first thing that we do is
-// resolve the full path of the module, which we call id. This task is delegated to
-// require.resolve(), which implements a specific resolving algorithm
-// [2] If the module has already been loaded in the past, it should be available in the
-// cache. In this case, we just return it immediately
-// [3] If the module was not loaded yet, we set up the environment for the first load.
-// In particular, we create a module object that contains an exports property
-// initialized with an empty object literal. This property will be used by the code of
-// the module to export any public API. 
-// [4] The module object is cached. 
-// [5] The module source code is read from its file and the code is evaluated, as we
-// have seen before. We provide the module with the module object that we just
-// created, and a reference to the require() function. The module exports its
-// public API by manipulating or replacing the module.exports object. 
-// [6] Finally, the content of module.exports, which represents the public API of the
-// module, is returned to the caller.
