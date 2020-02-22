@@ -1,1 +1,1 @@
-./otroarchivo/archivo2.txt
+./otrosarchivos/archivo2.txt
