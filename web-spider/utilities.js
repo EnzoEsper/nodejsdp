@@ -5,10 +5,8 @@ const path = require('path');
 module.exports.urlToFilename = function urlToFilename(url) {
   const parsedUrl = urlParse(url);
   const urlPath = parsedUrl.path.split('/')
-    .filter(function(component) {
-      return component !== '';
-    })
-    .map(function(component) {
+    .filter(component => component !== '')
+    .map(component => {
       return slug(component, { remove: null });
     })
     .join('/');
